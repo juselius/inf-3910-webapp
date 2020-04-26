@@ -127,7 +127,7 @@ jobs:
       - name: Publish to registry
         env:
           buildid: $(git rev-parse --short "$GITHUB_SHA")
-        run: - |
+        run: |-
           docker build -t registry.itpartner.no/catalysis/release-${buildid}
           docker build -t registry.itpartner.no/catalysis/release-${buildid}
 
