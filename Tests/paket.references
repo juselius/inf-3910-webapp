@@ -1,0 +1,11 @@
+group Tests
+    FSharp.Core
+    Argu
+    Expecto
+    Expecto.BenchmarkDotNet
+    Expecto.FsCheck
+    Expecto.Hopac
+    Microsoft.NET.Test.Sdk
+    YoloDev.Expecto.TestSdk
+    canopy
+    Selenium.WebDriver.ChromeDriver

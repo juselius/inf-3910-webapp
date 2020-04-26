@@ -1,0 +1,49 @@
+[
+    {
+        "First": "Foo",
+        "Last": "Bar",
+        "Alias": "Raboof",
+        "Age": 19,
+        "Height": 186
+    },
+    {
+        "First": "Barnabas",
+        "Last": "Plomlund",
+        "Alias": "Poet",
+        "Age": 37,
+        "Height": 201
+    },
+    {
+        "First": "Maiken",
+        "Last": "Melkerson",
+        "Alias": "Tjorven",
+        "Age": 6,
+        "Height": 148
+    },
+    {
+        "First": "Reodor",
+        "Last": "Felgen",
+        "Age": 68,
+        "Height": 169
+    },
+    {
+        "First": "Frøydis",
+        "Last": "Frukthage",
+        "Age": 79,
+        "Height": 163
+    },
+    {
+        "First": "Mikhail",
+        "Last": "Gorbatjov",
+        "Alias": "Gorbi",
+        "Age": 89,
+        "Height": 171
+    },
+    {
+        "First": "Melker",
+        "Last": "Melkerson",
+        "Alias": "Gorbatjorven",
+        "Age": 51,
+        "Height": 186
+    }
+]

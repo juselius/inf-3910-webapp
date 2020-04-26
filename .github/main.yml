@@ -1,0 +1,134 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Cache Nuget
+      uses: actions/cache@v1
+      env:
+        cache-name: cache-nuget
+      with:
+        path: ~/.nuget
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/paket.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-build-${{ env.cache-name }}-
+          ${{ runner.os }}-build-
+          ${{ runner.os }}-
+
+    - name: Cache npm
+      uses: actions/cache@v1
+      env:
+        cache-name: cache-npm
+      with:
+        path: ./node_modules
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/yarn.lock') }}
+        restore-keys:
+          ${{ runner.os }}-build-${{ env.cache-name }}-
+          ${{ runner.os }}-build-
+          ${{ runner.os }}-
+
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.101
+
+    - name: Install dotnet tools
+      run: dotnet tool install paket -g && dotnet tool install fake-cli -g
+
+    - name: Setup Node
+      uses: actions/setup-node@v1
+      with:
+        node-version: '10.x'
+
+    - name: Install dependencies
+      run: yarn && paket install
+
+    - name: Build
+      run: fake build -t Release
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: catalysis-release
+        path: ./deploy
+
+  build-debug:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Cache Nuget
+      uses: actions/cache@v1
+      env:
+        cache-name: cache-nuget
+      with:
+        path: ~/.nuget
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/paket.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-build-${{ env.cache-name }}-
+          ${{ runner.os }}-build-
+          ${{ runner.os }}-
+
+    - name: Cache npm
+      uses: actions/cache@v1
+      env:
+        cache-name: cache-npm
+      with:
+        path: ./node_modules
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/yarn.lock') }}
+        restore-keys:
+          ${{ runner.os }}-build-${{ env.cache-name }}-
+          ${{ runner.os }}-build-
+          ${{ runner.os }}-
+
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.101
+
+    - name: Install dotnet tools
+      run: |
+        dotnet tool install paket -g
+        dotnet tool install fake-cli -g
+
+    - name: Setup Node
+      uses: actions/setup-node@v1
+      with:
+        node-version: '10.x'
+
+    - name: Install dependencies
+      run: yarn && paket install
+
+    - name: Build
+      run: fake build -t Debug
+    - name: Upload artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: catalysis-debug
+        path: ./deploy
+
+  docker-release:
+    runs-on: ubuntu-latest
+    needs: build-release
+    steps:
+      - name: Pull artifacts
+        uses: actions/download-artifact@v1
+        env:
+          buildid: $(git rev-parse --short "$GITHUB_SHA")
+        with:
+          name: catalysis-release
+      - name: Publish to registry
+        env:
+          buildid: $(git rev-parse --short "$GITHUB_SHA")
+        run: - |
+          docker build -t registry.itpartner.no/catalysis/release-${buildid}
+          docker build -t registry.itpartner.no/catalysis/release-${buildid}
+
+

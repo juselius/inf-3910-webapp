@@ -1,0 +1,17 @@
+group Client
+    Fable.Core
+    Fable.Elmish
+    Fable.Elmish.Debugger
+    Fable.Elmish.React
+    Fable.Elmish.HMR
+    Fable.React
+    Fable.Browser.Dom
+    Fable.FontAwesome.Free
+    Thoth.Fetch
+    Thoth.Json
+    Feliz
+    Feliz.Bulma
+    Feliz.Router
+    Feliz.Recharts
+    Zanaptak.TypedCssClasses
+
