@@ -1,0 +1,11 @@
+name: Install dependencies
+description: Install NuGet and NPM dependencies
+runs:
+  using: 'docker'
+  image: 'docker://sdk:latest'
+  args:
+    - /bin/bash
+    - -c
+    - |
+        paket install
+        yarn install

@@ -1,0 +1,17 @@
+name: FAKE build
+description: Run FAKE to build the F#/Fable project
+inputs:
+  target:
+    description: Target (debug or release)
+    required: false
+    default: release
+runs:
+  using: 'docker'
+  image: 'docker://sdk:latest'
+  args:
+    - /bin/bash
+    - -c
+    - |
+      env
+      dotnet tool restore
+      fake build -t ${{ inputs.target }}

@@ -1,0 +1,111 @@
+name: Build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  sdk-image: docker.pkg.github.com/${{ github.repository }}/sdk:latest
+
+jobs:
+  build-release:
+    env:
+      target: release
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Pull SDK
+      run: |
+        docker login docker.pkg.github.com -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
+        docker pull ${{ env.sdk-image }}
+        docker tag ${{ env.sdk-image }} sdk:latest
+    - name: Restore NuGet
+      uses: actions/cache@v1
+      env:
+        cache-name: cache-nuget
+      with:
+        path: ~/.nuget
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/paket.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-build-${{ env.cache-name }}-
+          ${{ runner.os }}-build-
+          ${{ runner.os }}-
+    - name: Restore npm
+      uses: actions/cache@v1
+      env:
+        cache-name: cache-npm
+      with:
+        path: ./node_modules
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/yarn.lock') }}
+        restore-keys:
+          ${{ runner.os }}-build-${{ env.cache-name }}-
+          ${{ runner.os }}-build-
+          ${{ runner.os }}-
+    - name: Install dependencies
+      uses: ./.github/actions/install-deps
+    - name: Build
+      uses: ./.github/actions/build
+      with:
+        target: ${{ env.target }}
+    - name: Release
+      uses: docker/build-push-action@v1
+      with:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+        repository: ${{ github.repository }}/${{ env.target }}
+        registry: docker.pkg.github.com
+        tags: latest
+        tag_with_ref: true
+        tag_with_sha: true
+
+#   build-debug:
+#     env:
+#       target: debug
+#     runs-on: ubuntu-latest
+#     steps:
+#     - uses: actions/checkout@v2
+#     - name: Pull SDK
+#       run: |
+#         docker login docker.pkg.github.com -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
+#         docker pull ${{ env.sdk-image }}
+#         docker tag ${{ env.sdk-image }} sdk:latest
+#     - name: Restore NuGet
+#       uses: actions/cache@v1
+#       env:
+#         cache-name: cache-nuget
+#       with:
+#         path: ~/.nuget
+#         key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/paket.lock') }}
+#         restore-keys: |
+#           ${{ runner.os }}-build-${{ env.cache-name }}-
+#           ${{ runner.os }}-build-
+#           ${{ runner.os }}-
+#     - name: Restore npm
+#       uses: actions/cache@v1
+#       env:
+#         cache-name: cache-npm
+#       with:
+#         path: ./node_modules
+#         key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/yarn.lock') }}
+#         restore-keys:
+#           ${{ runner.os }}-build-${{ env.cache-name }}-
+#           ${{ runner.os }}-build-
+#           ${{ runner.os }}-
+#     - name: Install dependencies
+#       uses: ./.github/actions/install-deps
+#     - name: Build
+#       uses: ./.github/actions/build
+#       with:
+#         target: ${{ env.target }}
+#     - name: Release
+#       uses: docker/build-push-action@v1
+#       with:
+#         username: ${{ github.actor }}
+#         password: ${{ secrets.GITHUB_TOKEN }}
+#         repository: ${{ github.repository }}/${{ env.target }}
+#         registry: docker.pkg.github.com
+#         tags: latest
+#         tag_with_ref: true
+#         tag_with_sha: true
