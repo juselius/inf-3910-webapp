@@ -3,6 +3,10 @@ name: CI/CD
 on:
   push:
     branches: [ master ]
+    paths:
+    - '.devcontainer/Dockerfile'
+    - 'paket.lock'
+    - 'yarn.lock'
   pull_request:
     branches: [ master ]
 
