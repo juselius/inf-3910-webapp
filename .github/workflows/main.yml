@@ -10,11 +10,32 @@ env:
   sdk-image: juselius/inf-3910-webapp/sdk:latest
 
 jobs:
+  create-sdk:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - id: cache
+      uses: actions/cache@v1
+      with:
+        path: .devcontainer/Dockerfile
+        key: ${{ runner.os }}-devcontainer-${{ hashFiles('.devcontainer/Dockerfile') }}
+    - name: Create SDK
+      if: steps.cache.outputs.cache-hit != 'true'
+      uses: docker/build-push-action@v1
+      with:
+          username: juselius
+          password: ${{ secrets.DOCKER_HUB }}
+          repository: juselius/inf-3910-webapp/sdk
+          registry: hub.docker.com
+          path: .devcontainer
+          tags: latest
+
   build-release:
     container: ${{ env.sdk-image }}
     env:
       target: release
     runs-on: ubuntu-latest
+    needs: create-sdk
     steps:
     - uses: actions/checkout@v2
     - name: Restore NuGet
@@ -60,6 +81,7 @@ jobs:
   tests:
     container: ${{ env.sdk-image }}
     runs-on: ubuntu-latest
+    needs: create-sdk
     steps:
     - uses: actions/checkout@v2
     - name: Run tests
@@ -69,6 +91,7 @@ jobs:
   ui-tests:
     container: ${{ env.sdk-image }}
     runs-on: ubuntu-latest
+    needs: create-sdk
     steps:
     - uses: actions/checkout@v2
     - name: Run tests
