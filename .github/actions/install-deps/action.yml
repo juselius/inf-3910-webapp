@@ -7,5 +7,6 @@ runs:
     - /bin/bash
     - -c
     - |
-        paket install
         yarn install
+        paket install
+        mv ~/.nuget .

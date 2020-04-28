@@ -45,6 +45,9 @@ jobs:
           ${{ runner.os }}-
     - name: Install dependencies
       uses: ./.github/actions/install-deps
+    - name: Fixup dependencies
+      run: |
+          [ -d .nuget ] && mv .nuget ~/.nuget
     - name: Build
       uses: ./.github/actions/build
       with:
