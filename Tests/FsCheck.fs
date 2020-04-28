@@ -32,7 +32,7 @@ type PersonGen() =
             |> string
             |> Gen.constant
             |> Gen.optionOf
-        let genAge = Gen.choose (1,101)
+        let genAge = Gen.choose (1,99)
         let genHeight = Gen.choose (99,200)
         let createPerson firstName lastName alias age height = {
             First = firstName
@@ -53,7 +53,7 @@ type PersonGen() =
 let config' = {
     FsCheckConfig.defaultConfig with
         arbitrary = [typeof<PersonGen>]
-        maxTest = 1000
+        maxTest = 100
     }
 
 [<Tests>]
