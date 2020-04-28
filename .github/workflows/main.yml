@@ -8,13 +8,13 @@ on:
 
 jobs:
   create-sdk:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
     - uses: actions/checkout@v2
     - id: cache
       uses: actions/cache@v1
       with:
-        path: .devcontainer/Dockerfile
+        path: .devcontainer
         key: ${{ runner.os }}-cache-sdk-${{ hashFiles('.devcontainer/Dockerfile') }}
     - name: Create SDK
       if: steps.cache.outputs.cache-hit != 'true'
@@ -30,7 +30,7 @@ jobs:
     container: juselius/inf-3910-webapp-sdk:latest
     env:
       target: release
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: create-sdk
     steps:
     - uses: actions/checkout@v2
@@ -69,7 +69,7 @@ jobs:
 
   tests:
     container: juselius/inf-3910-webapp-sdk:latest
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: create-sdk
     steps:
     - uses: actions/checkout@v2
