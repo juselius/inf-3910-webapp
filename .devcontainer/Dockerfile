@@ -23,8 +23,6 @@ RUN dotnet tool install paket -g
 # Install dotnet-retire
 RUN dotnet tool install dotnet-retire -g
 
-RUN dotnet tool restore
-
 # Install retire.js
 RUN npm install -g retire
 
