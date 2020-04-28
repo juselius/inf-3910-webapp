@@ -1,4 +1,4 @@
-name: Build
+name: CD/CD
 
 on:
   push:
@@ -7,20 +7,16 @@ on:
     branches: [ master ]
 
 env:
-  sdk-image: docker.pkg.github.com/${{ github.repository }}/sdk:latest
+  sdk-image: juselius/inf-3910-webapp/sdk:latest
 
 jobs:
   build-release:
+    container: ${{ env.sdk-image }}
     env:
       target: release
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Pull SDK
-      run: |
-        docker login docker.pkg.github.com -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
-        docker pull ${{ env.sdk-image }}
-        docker tag ${{ env.sdk-image }} sdk:latest
     - name: Restore NuGet
       uses: actions/cache@v1
       env:
@@ -44,15 +40,12 @@ jobs:
           ${{ runner.os }}-build-
           ${{ runner.os }}-
     - name: Install dependencies
-      uses: ./.github/actions/install-deps
-    - name: Fixup dependencies
       run: |
-          rm -rf ~/.nuget
-          [ -d .nuget ] && mv .nuget ~/.nuget
+          yarn install
+          paket install
     - name: Build
-      uses: ./.github/actions/build
-      with:
-        target: ${{ env.target }}
+      run: |
+        fake build -t ${{ env.target }}
     - name: Release
       uses: docker/build-push-action@v1
       with:
@@ -63,6 +56,24 @@ jobs:
         tags: latest
         tag_with_ref: true
         tag_with_sha: true
+
+  tests:
+    container: ${{ env.sdk-image }}
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run tests
+      run: |
+        dotnet run -p Tests/Tests.fsproj
+
+  ui-tests:
+    container: ${{ env.sdk-image }}
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run tests
+      run: |
+        dotnet run -p Tests/Tests.fsproj -- --canopy headless
 
 #   build-debug:
 #     env:

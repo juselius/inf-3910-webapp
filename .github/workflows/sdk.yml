@@ -4,7 +4,7 @@ on:
   push:
     branches: [ master ]
     paths:
-    - .devcontainer/Dockerfile
+    # - .devcontainer/Dockerfile
   pull_request:
     branches: [ master ]
 
@@ -16,9 +16,9 @@ jobs:
     - name: Create SDK
       uses: docker/build-push-action@v1
       with:
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-          repository: ${{ github.repository }}/sdk
-          registry: docker.pkg.github.com
+          username: juselius
+          password: ${{ secrets.DOCKER_HUB }}
+          repository: juselius/inf-3910-webapp/sdk
+          registry: docker.com
           path: .devcontainer
           tags: latest
