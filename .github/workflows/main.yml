@@ -58,11 +58,11 @@ jobs:
           ${{ runner.os }}-
     - name: Install dependencies
       run: |
-          yarn install
-          paket install
+        dotnet tool restore
+        yarn install
+        paket install
     - name: Build
       run: |
-        dotnet tool restore
         fake build -t ${{ env.target }}
     - name: Release
       uses: docker/build-push-action@v1
@@ -81,25 +81,37 @@ jobs:
     needs: create-sdk
     steps:
     - uses: actions/checkout@v2
-    - name: Run tests
+    - name: Restore NuGet
+      uses: actions/cache@v1
+      env:
+        cache-name: cache-nuget
+      with:
+        path: ~/.nuget
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/paket.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-build-${{ env.cache-name }}-
+          ${{ runner.os }}-build-
+          ${{ runner.os }}-
+    - name: Restore npm
+      uses: actions/cache@v1
+      env:
+        cache-name: cache-npm
+      with:
+        path: ./node_modules
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/yarn.lock') }}
+        restore-keys:
+          ${{ runner.os }}-build-${{ env.cache-name }}-
+          ${{ runner.os }}-build-
+          ${{ runner.os }}-
+    - name: Install dependencies
       run: |
         dotnet tool restore
         yarn install
         paket install
-        dotnet run -p Tests/Tests.fsproj
-
-  ui-tests:
-    container: juselius/inf-3910-webapp-sdk:latest
-    runs-on: ubuntu-latest
-    needs: create-sdk
-    steps:
-    - uses: actions/checkout@v2
-    - name: Run tests
-      run: |
-        dotnet tool restore
-        yarn install
-        paket install
-        dotnet run -p Tests/Tests.fsproj -- --canopy headless
+    - name: Run unit tests
+      run: dotnet run -p Tests
+    - name: Run UI tests
+      run: dotnet run -p Tests -- --canopy headless
 
 #   build-debug:
 #     env:
