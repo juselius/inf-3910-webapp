@@ -35,5 +35,6 @@ let main argv =
         | Some mode -> UI.testUI mode
         | None -> UI.testUI UI.CanopyMode.Browser
     else
+        Db.tryMigrate ()
         Tests.runTestsInAssemblyWithCLIArgs [] argv
 
