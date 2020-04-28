@@ -23,7 +23,6 @@ jobs:
           username: juselius
           password: ${{ secrets.DOCKER_HUB }}
           repository: juselius/inf-3910-webapp/sdk
-          registry: hub.docker.com
           path: .devcontainer
           tags: latest
 
