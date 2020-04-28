@@ -12,9 +12,9 @@ RUN apt-get update \
 
 # Install google-chrome for Canopy/Selenium
 RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
-    && apt install ./google-chrome-stable_current_amd64.deb \
+    && apt install -y ./google-chrome-stable_current_amd64.deb \
     && sed -i 's,HERE/chrome",& --no-sandbox ,' /opt/google/chrome/google-chrome \
-    && rm google-chrome-stable_current_amd64.deb
+    && rm -f google-chrome-stable_current_amd64.deb
 
 # Clean up
 RUN apt-get autoremove -y \
