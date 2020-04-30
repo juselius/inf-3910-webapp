@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: {{ include "webapp.fullname" . }}
   labels:
-    app.gitlab.com/env: {{ default "production" .Values.environment }}
+    env: {{ default "production" .Values.environment }}
 {{ include "webapp.labels" . | indent 4 }}
 data:
   appsettings.json: |-
