@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "webapp.fullname" . }}
+  labels:
+    app.gitlab.com/env: {{ default "production" .Values.environment }}
+{{ include "webapp.labels" . | indent 4 }}
+data:
+  appsettings.json: |-
+  {{- if hasPrefix "production" .Values.environment }}
+    {{ .Values.appsettings.production | nindent 4 }}
+  {{- else  }}
+    {{ .Values.appsettings.staging | nindent 4 }}
+  {{- end }}
+
