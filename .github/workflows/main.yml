@@ -66,6 +66,44 @@ jobs:
     - name: Build
       run: |
         fake build -t ${{ env.target }}
+    - name: Upload deploy bundle
+        uses: actions/upload-artifact@v1
+        with:
+          name: deploy
+          path: deploy
+    - name: Upload charts
+        uses: actions/upload-artifact@v1
+        with:
+          name: charts
+          path: charts
+    - name: Upload Dockerfile
+        uses: actions/upload-artifact@v1
+        with:
+          name: Dockerfile
+          path: Dockerfile
+
+  release:
+    container: juselius/inf-3910-webapp-sdk:latest
+    env:
+      target: release
+    runs-on: self-hosted
+    needs: build
+    steps:
+    - name: Download deploy bundle
+        uses: actions/download-artifact@v1
+        with:
+          name: deploy
+          path: deploy
+    - name: Download charts
+        uses: actions/download-artifact@v1
+        with:
+          name: charts
+          path: charts
+    - name: Download Dockerfile
+        uses: actions/download-artifact@v1
+        with:
+          name: Dockerfile
+          path: Dockerfile
     - name: Release
       uses: docker/build-push-action@v1
       with:
@@ -111,7 +149,7 @@ jobs:
   deploy-staging:
     container: dtzar/helm-kubectl:latest
     runs-on: self-hosted
-    needs: build-release
+    needs: release
     steps:
     - uses: actions/checkout@v2
     - name: Deploy
@@ -128,8 +166,8 @@ jobs:
         helm list -n $KUBE_NAMESPACE
         cmd=upgrade && helm list -q -n $KUBE_NAMESPACE | grep -q "$DEPLOY_NAME" || cmd=install
         [ ! -z $EXTERNAL_NAME ] && EXTERNAL_INGRESS="--set ingress.hosts[1].host=$EXTERNAL_NAME --set ingress.hosts[1].paths[0]=/"
-        echo "helm $cmd $DEPLOY_NAME"
 
+        echo "helm $cmd $DEPLOY_NAME"
         helm $cmd -f ./charts/values.yaml \
             --namespace $KUBE_NAMESPACE \
             --set image.tag=$IMAGE_TAG \
