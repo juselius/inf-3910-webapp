@@ -67,43 +67,43 @@ jobs:
       run: |
         fake build -t ${{ env.target }}
     - name: Upload deploy bundle
-        uses: actions/upload-artifact@v1
-        with:
-          name: deploy
-          path: deploy
+      uses: actions/upload-artifact@v1
+      with:
+        name: deploy
+        path: deploy
     - name: Upload charts
-        uses: actions/upload-artifact@v1
-        with:
-          name: charts
-          path: charts
+      uses: actions/upload-artifact@v1
+      with:
+        name: charts
+        path: charts
     - name: Upload Dockerfile
-        uses: actions/upload-artifact@v1
-        with:
-          name: Dockerfile
-          path: Dockerfile
+      uses: actions/upload-artifact@v1
+      with:
+        name: Dockerfile
+        path: Dockerfile
 
   release:
     container: juselius/inf-3910-webapp-sdk:latest
     env:
       target: release
     runs-on: self-hosted
-    needs: build
+    needs: build-release
     steps:
     - name: Download deploy bundle
-        uses: actions/download-artifact@v1
-        with:
-          name: deploy
-          path: deploy
+      uses: actions/download-artifact@v1
+      with:
+        name: deploy
+        path: deploy
     - name: Download charts
-        uses: actions/download-artifact@v1
-        with:
-          name: charts
-          path: charts
+      uses: actions/download-artifact@v1
+      with:
+        name: charts
+        path: charts
     - name: Download Dockerfile
-        uses: actions/download-artifact@v1
-        with:
-          name: Dockerfile
-          path: Dockerfile
+      uses: actions/download-artifact@v1
+      with:
+        name: Dockerfile
+        path: Dockerfile
     - name: Release
       uses: docker/build-push-action@v1
       with:
