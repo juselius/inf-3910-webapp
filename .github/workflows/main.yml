@@ -9,6 +9,7 @@ on:
 jobs:
   create-sdk:
     runs-on: self-hosted
+    container: ubuntu:18.04
     steps:
     - uses: actions/checkout@v2
     - id: cache
@@ -64,7 +65,6 @@ jobs:
         repository: ${{ github.repository }}/${{ env.target }}
         registry: docker.pkg.github.com
         tags: latest
-        tag_with_ref: true
         tag_with_sha: true
 
   tests:
@@ -96,3 +96,38 @@ jobs:
       run: dotnet run -p Tests
     - name: Run UI tests
       run: dotnet run -p Tests -- --canopy headless
+
+  deploy-staging:
+    container: dtzar/helm-kubectl:latest
+    runs-on: self-hosted
+    needs: release
+    env:
+      PROJECT_OWNER: juselius
+      PROJECT_NAME: inf-3910-webapp
+      KUBE_INSTANCE: kube2
+      KUBE_NAMESPACE: juselius
+      IMAGE_TAG: latest
+      DEPLOY_ENV: staging
+      EXTERNAL_NAME: webapp.serit.no
+      helm: install
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup
+      run: |
+        export SERVICE_NAME="$PROJECT_NAME.$PROJECT_OWNER.$KUBE_INSTANCE.local"
+        export DEPLOY_NAME="$PROJECT_NAME-$DEPLOY_ENV"
+        env
+        mkdir -p /root/.kube
+        echo ${{ secrets.KUBE_CONFIG }} > /root/.kube/config
+        kubectl config use-context $KUBE_INSTANCE
+        kubectl get pods -n $KUBE_NAMESPACE
+        helm list -n $KUBE_NAMESPACE
+        helm list -q -n $KUBE_NAMESPACE | grep -q "$DEPLOY_NAME" && helm=upgrade
+    - name: Deploy
+      run: |
+      helm $helm -f ./charts/values.yaml \
+        --namespace $KUBE_NAMESPACE \
+        --set image.tag=$IMAGE_TAG \
+        --set ingress.hosts[0].host=$SERVICE_NAME $EXTERNAL_NAME \
+        --set ingress.tls[0].hosts[0]=$SERVICE_NAME \
+        $DEPLOY_NAME ./charts
