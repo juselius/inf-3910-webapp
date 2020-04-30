@@ -81,6 +81,8 @@ jobs:
       with:
         name: Dockerfile
         path: Dockerfile
+    - name: Cleanup
+      run: rm -rf deploy
 
   release:
     container: juselius/inf-3910-webapp-sdk:latest
@@ -94,11 +96,6 @@ jobs:
       with:
         name: deploy
         path: deploy
-    - name: Download charts
-      uses: actions/download-artifact@v1
-      with:
-        name: charts
-        path: charts
     - name: Download Dockerfile
       uses: actions/download-artifact@v1
       with:
@@ -113,13 +110,16 @@ jobs:
         registry: docker.pkg.github.com
         tags: latest
         tag_with_sha: true
+    - name: Cleanup
+      run: |
+        rm -rf deploy
 
   tests:
     container: juselius/inf-3910-webapp-sdk:latest
     runs-on: self-hosted
     needs: create-sdk
     steps:
-    - uses: actions/checkout@v2
+    # - uses: actions/checkout@v2
     - name: Restore NuGet
       uses: actions/cache@v1
       with:
@@ -141,17 +141,28 @@ jobs:
         paket install
     - name: Run unit tests
       run: dotnet run -p Tests
+    - name: Download deploy bundle
+      uses: actions/download-artifact@v1
+      with:
+        name: deploy
+        path: deploy
     - name: Run UI tests
       run: dotnet run -p Tests -- --canopy headless
     - name: Cleanup
-      run: rm -rf \\canopy\\
+      run: |
+        rm -rf deploy \\canopy\\
 
   deploy-staging:
     container: dtzar/helm-kubectl:latest
     runs-on: self-hosted
     needs: release
     steps:
-    - uses: actions/checkout@v2
+    # - uses: actions/checkout@v2
+    - name: Download charts
+      uses: actions/download-artifact@v1
+      with:
+        name: charts
+        path: charts
     - name: Deploy
       run: |
         DEPLOY_NAME=$PROJECT_NAME-$DEPLOY_ENV
