@@ -35,6 +35,9 @@ jobs:
           repository: juselius/inf-3910-webapp-sdk
           path: .devcontainer
           tags: latest
+    - name: Cleanup
+      run: |
+        chown -R 1000:1000 .
 
   build-release:
     container: juselius/inf-3910-webapp-sdk:latest
@@ -67,40 +70,28 @@ jobs:
       run: |
         fake build -t ${{ env.target }}
     - name: Upload deploy bundle
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: deploy
         path: deploy
-    - name: Upload charts
-      uses: actions/upload-artifact@v1
-      with:
-        name: charts
-        path: charts
-    - name: Upload Dockerfile
-      uses: actions/upload-artifact@v1
-      with:
-        name: Dockerfile
-        path: Dockerfile
     - name: Cleanup
-      run: rm -rf deploy
+      run: |
+        chown -R 1000:1000 .
+        rm -rf deploy
 
   release:
-    container: juselius/inf-3910-webapp-sdk:latest
+    # container: juselius/inf-3910-webapp-sdk:latest
     env:
       target: release
     runs-on: self-hosted
     needs: build-release
     steps:
+    - uses: actions/checkout@v2
     - name: Download deploy bundle
-      uses: actions/download-artifact@v1
+      uses: actions/download-artifact@v2
       with:
         name: deploy
         path: deploy
-    - name: Download Dockerfile
-      uses: actions/download-artifact@v1
-      with:
-        name: Dockerfile
-        path: Dockerfile
     - name: Release
       uses: docker/build-push-action@v1
       with:
@@ -112,14 +103,15 @@ jobs:
         tag_with_sha: true
     - name: Cleanup
       run: |
+        chown -R 1000:1000 .
         rm -rf deploy
 
   tests:
     container: juselius/inf-3910-webapp-sdk:latest
     runs-on: self-hosted
-    needs: create-sdk
+    needs: build-release
     steps:
-    # - uses: actions/checkout@v2
+    - uses: actions/checkout@v2
     - name: Restore NuGet
       uses: actions/cache@v1
       with:
@@ -142,7 +134,7 @@ jobs:
     - name: Run unit tests
       run: dotnet run -p Tests
     - name: Download deploy bundle
-      uses: actions/download-artifact@v1
+      uses: actions/download-artifact@v2
       with:
         name: deploy
         path: deploy
@@ -150,6 +142,7 @@ jobs:
       run: dotnet run -p Tests -- --canopy headless
     - name: Cleanup
       run: |
+        chown -R 1000:1000 .
         rm -rf deploy \\canopy\\
 
   deploy-staging:
@@ -157,12 +150,7 @@ jobs:
     runs-on: self-hosted
     needs: release
     steps:
-    # - uses: actions/checkout@v2
-    - name: Download charts
-      uses: actions/download-artifact@v1
-      with:
-        name: charts
-        path: charts
+    - uses: actions/checkout@v2
     - name: Deploy
       run: |
         DEPLOY_NAME=$PROJECT_NAME-$DEPLOY_ENV
@@ -187,3 +175,16 @@ jobs:
             --set ingress.tls[0].hosts[0]=$SERVICE_NAME \
             $EXTERNAL_INGRESS \
             $DEPLOY_NAME ./charts
+    - name: Cleanup
+      run: |
+        chown -R 1000:1000 .
+
+  deploy-local-docker:
+    runs-on: [ self-hosted, local ]
+    needs: release
+    steps:
+    - name: Deploy local:webapp
+      run: |
+        docker run --rm -p 8085:8085 -d \
+        -e CONTENT_ROOT=/app/public \
+        docker.pkg.github.com/juselius/inf-3910-webapp/release:latest
