@@ -143,46 +143,46 @@ jobs:
         chown -R 1000:1000 .
         rm -rf deploy \\canopy\\
 
-  deploy-staging:
-    container: dtzar/helm-kubectl:latest
-    runs-on: self-hosted
-    needs: release
-    steps:
-    - uses: actions/checkout@v2
-    - name: Deploy
-      run: |
-        DEPLOY_NAME=$PROJECT_NAME-$DEPLOY_ENV
-        SERVICE_NAME=$DEPLOY_NAME.$PROJECT_OWNER.$KUBE_INSTANCE.local
-        env
+#   deploy-staging:
+#     container: dtzar/helm-kubectl:latest
+#     runs-on: self-hosted
+#     needs: release
+#     steps:
+#     - uses: actions/checkout@v2
+#     - name: Deploy
+#       run: |
+#         DEPLOY_NAME=$PROJECT_NAME-$DEPLOY_ENV
+#         SERVICE_NAME=$DEPLOY_NAME.$PROJECT_OWNER.$KUBE_INSTANCE.local
+#         env
 
-        mkdir -p $HOME/.kube
-        echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
-        kubectl config use-context $KUBE_INSTANCE
-        kubectl get pods -n $KUBE_NAMESPACE
+#         mkdir -p $HOME/.kube
+#         echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
+#         kubectl config use-context $KUBE_INSTANCE
+#         kubectl get pods -n $KUBE_NAMESPACE
 
-        helm list -n $KUBE_NAMESPACE
-        cmd=upgrade && helm list -q -n $KUBE_NAMESPACE | grep -q "$DEPLOY_NAME" || cmd=install
-        [ ! -z $EXTERNAL_NAME ] && EXTERNAL_INGRESS="--set ingress.hosts[1].host=$EXTERNAL_NAME --set ingress.hosts[1].paths[0]=/"
+#         helm list -n $KUBE_NAMESPACE
+#         cmd=upgrade && helm list -q -n $KUBE_NAMESPACE | grep -q "$DEPLOY_NAME" || cmd=install
+#         [ ! -z $EXTERNAL_NAME ] && EXTERNAL_INGRESS="--set ingress.hosts[1].host=$EXTERNAL_NAME --set ingress.hosts[1].paths[0]=/"
 
-        echo "helm $cmd $DEPLOY_NAME"
-        helm $cmd -f ./charts/values.yaml \
-            --namespace $KUBE_NAMESPACE \
-            --set image.tag=$IMAGE_TAG \
-            --set environment=$DEPLOY_ENV \
-            --set ingress.hosts[0].host=$SERVICE_NAME \
-            --set ingress.tls[0].hosts[0]=$SERVICE_NAME \
-            $EXTERNAL_INGRESS \
-            $DEPLOY_NAME ./charts
-    - name: Cleanup
-      run: |
-        chown -R 1000:1000 .
+#         echo "helm $cmd $DEPLOY_NAME"
+#         helm $cmd -f ./charts/values.yaml \
+#             --namespace $KUBE_NAMESPACE \
+#             --set image.tag=$IMAGE_TAG \
+#             --set environment=$DEPLOY_ENV \
+#             --set ingress.hosts[0].host=$SERVICE_NAME \
+#             --set ingress.tls[0].hosts[0]=$SERVICE_NAME \
+#             $EXTERNAL_INGRESS \
+#             $DEPLOY_NAME ./charts
+#     - name: Cleanup
+#       run: |
+#         chown -R 1000:1000 .
 
-  deploy-local-docker:
-    runs-on: [ self-hosted, local ]
-    needs: release
-    steps:
-    - name: Deploy local:webapp
-      run: |
-        docker run --rm -p 8085:8085 -d \
-        -e CONTENT_ROOT=/app/public \
-        docker.pkg.github.com/juselius/inf-3910-webapp/release:latest
+#   deploy-local-docker:
+#     runs-on: [ self-hosted, local ]
+#     needs: release
+#     steps:
+#     - name: Deploy local:webapp
+#       run: |
+#         docker run --rm -p 8085:8085 -d \
+#         -e CONTENT_ROOT=/app/public \
+#         docker.pkg.github.com/juselius/inf-3910-webapp/release:latest
