@@ -34,9 +34,9 @@ jobs:
           repository: juselius/inf-3910-webapp-sdk
           path: .devcontainer
           tags: latest
-    - name: Cleanup
-      run: |
-        chown -R 1000:1000 .
+    # - name: Cleanup
+    #   run: |
+    #     chown -R 1000:1000 .
 
   build-release:
     container: juselius/inf-3910-webapp-sdk:latest
@@ -99,10 +99,10 @@ jobs:
         registry: docker.pkg.github.com
         tags: latest
         tag_with_sha: true
-    - name: Cleanup
-      run: |
-        chown -R 1000:1000 .
-        rm -rf deploy
+    # - name: Cleanup
+    #   run: |
+    #     chown -R 1000:1000 .
+    #     rm -rf deploy
 
   tests:
     container: juselius/inf-3910-webapp-sdk:latest
