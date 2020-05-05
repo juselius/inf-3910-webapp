@@ -110,11 +110,11 @@ jobs:
     needs: build-release
     steps:
     - uses: actions/checkout@v2
-    # - name: Download deploy bundle
-    #   uses: actions/download-artifact@v2
-    #   with:
-    #     name: deploy
-    #     path: deploy
+    - name: Download deploy bundle
+      uses: actions/download-artifact@v2
+      with:
+        name: deploy
+        path: deploy
     - name: Restore NuGet
       uses: actions/cache@v1
       with:
