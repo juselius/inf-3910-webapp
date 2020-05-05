@@ -33,6 +33,9 @@ RUN dotnet tool install dotnet-retire -g
 # Install retire.js
 RUN npm install -g retire
 
+# Trouble brewing
+RUN rm /etc/ssl/openssl.cnf
+
 # add dotnet tools to path to pick up fake and paket installation
 ENV PATH="/root/.dotnet/tools:${PATH}"
 
