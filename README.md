@@ -2,8 +2,11 @@
 
 # Example F# webapp
 
-This repository contains a demo web application written in F#. It demonstrates
-the follwing features:
+This repository contains a demo web application written in F#. The app is part
+of the course INF-3910-5 "Applied functional programming in F#", though at
+[UiT The Arctic University of Norway](https://uit.no/enhet/ifi).
+
+This project demonstrates the follwing features:
 
 * Fable and Elmish
 * Feliz
