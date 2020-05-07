@@ -31,7 +31,7 @@ jobs:
       with:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-        repository: ${{ github.repository }}/${{ env.target }}
+        repository: ${{ github.repository }}/sdk
         registry: docker.pkg.github.com
         path: .devcontainer
         tags: latest
