@@ -43,7 +43,7 @@ jobs:
     #     chown -R 1000:1000 .
 
   build-release:
-    container: ${{ github.repository }}/sdk:latest
+    container: docker.pkg.github.com/${{ github.repository }}/sdk:latest
     env:
       target: release
     runs-on: self-hosted
@@ -109,7 +109,7 @@ jobs:
     #     rm -rf deploy
 
   tests:
-    container: ${{ github.repository }}/sdk:latest
+    container: docker.pkg.github.com/${{ github.repository }}/sdk:latest
     runs-on: self-hosted
     needs: build-release
     steps:
