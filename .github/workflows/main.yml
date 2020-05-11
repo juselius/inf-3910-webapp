@@ -1,13 +1,14 @@
-name: Build
+name: Build Release
 
 env:
-  PROJECT_NAME: webapp
   PROJECT_OWNER: ${{ github.repository_owner }}
+  PROJECT_NAME: webapp
   KUBE_INSTANCE: kube2
   KUBE_NAMESPACE: ${{ github.repository_owner }}
   IMAGE_TAG: latest
   DEPLOY_ENV: staging
   EXTERNAL_NAME: webapp.serit.no
+  target: release
 
 on:
   push:
@@ -16,45 +17,15 @@ on:
     branches: [ master ]
 
 jobs:
-  create-sdk:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - id: cache
-      uses: actions/cache@v1
-      with:
-        path: .devcontainer
-        key: ${{ runner.os }}-cache-sdk-${{ hashFiles('.devcontainer/Dockerfile') }}
-    - name: Create SDK
-      if: steps.cache.outputs.cache-hit != 'true'
-      uses: docker/build-push-action@v1
-      with:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-        repository: ${{ github.repository }}/sdk
-        registry: docker.pkg.github.com
-        path: .devcontainer
-        tags: latest
-        # username: juselius
-        # password: ${{ secrets.DOCKER_HUB }}
-        # repository: juselius/inf-3910-webapp-sdk
-    # - name: Cleanup
-    #   run: |
-    #     chown -R 1000:1000 .
-
-  build-release:
-    container: docker.pkg.github.com/${{ github.repository }}/sdk:latest
-    env:
-      target: release
+  build:
     runs-on: self-hosted
-    needs: create-sdk
     steps:
     - uses: actions/checkout@v2
     - name: Restore NuGet
       uses: actions/cache@v1
       with:
         path: ~/.nuget
-        key: ${{ runner.os }}-cache-nuget-${{ hashFiles('**/paket.lock') }}
+        key: ${{ runner.os }}-cache-nuget-${{ hashFiles('*/*/packages.lock.json') }}
         restore-keys: |
           ${{ runner.os }}-cache-nuget-
     - name: Restore npm
@@ -68,7 +39,6 @@ jobs:
       run: |
         dotnet tool restore
         yarn install
-        paket install
     - name: Build
       run: |
         fake build -t ${{ env.target }}
@@ -79,14 +49,11 @@ jobs:
         path: deploy
     - name: Cleanup
       run: |
-        chown -R 1000:1000 .
         rm -rf deploy
 
   release:
-    env:
-      target: release
     runs-on: ubuntu-latest
-    needs: build-release
+    needs: build
     steps:
     - uses: actions/checkout@v2
     - name: Download deploy bundle
@@ -99,19 +66,14 @@ jobs:
       with:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-        repository: ${{ github.repository }}/${{ env.target }}
+        repository: ${{ github.repository }}/${{ env.PROJECT_NAME }}-${{ env.target }}
         registry: docker.pkg.github.com
         tags: latest
-        tag_with_sha: true
-    # - name: Cleanup
-    #   run: |
-    #     chown -R 1000:1000 .
-    #     rm -rf deploy
+        tag_with_sha: false
 
   tests:
-    container: docker.pkg.github.com/${{ github.repository }}/sdk:latest
     runs-on: self-hosted
-    needs: build-release
+    needs: build
     steps:
     - uses: actions/checkout@v2
     - name: Download deploy bundle
@@ -123,7 +85,7 @@ jobs:
       uses: actions/cache@v1
       with:
         path: ~/.nuget
-        key: ${{ runner.os }}-cache-nuget-${{ hashFiles('**/paket.lock') }}
+        key: ${{ runner.os }}-cache-nuget-${{ hashFiles('**/packages.json.lock') }}
         restore-keys: |
           ${{ runner.os }}-cache-nuget-
     - name: Restore npm
@@ -137,14 +99,12 @@ jobs:
       run: |
         dotnet tool restore
         yarn install
-        paket install
     - name: Run unit tests
       run: dotnet run -p Tests
     - name: Run UI tests
       run: dotnet run -p Tests -- --canopy headless
     - name: Cleanup
       run: |
-        chown -R 1000:1000 .
         rm -rf deploy \\canopy\\
 
 ## deploy to a local Kubernetes cluster
@@ -183,7 +143,7 @@ jobs:
         chown -R 1000:1000 .
 
 ## deploy to a local container on a runner labeled with "local"
-## ref. https://github.com/juselius/actions-runner-kubernetes
+## ref. https://github.com/juselius/kubernetes-actions-runner
 #   deploy-local-docker:
 #     runs-on: [ self-hosted, local ]
 #     needs: release
@@ -192,4 +152,4 @@ jobs:
 #       run: |
 #         docker run --rm -p 8085:8085 -d \
 #         -e CONTENT_ROOT=/app/public \
-#         docker.pkg.github.com/${{ github.repository }}/release:latest
+#         docker.pkg.github.com/${{ github.repository }}/${{ env.PROJECT_NAME }}-${{ env.target }}
